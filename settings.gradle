@@ -1,1 +1,1 @@
-include ':app', ':ioclibrary', ':baselibrary', ':framelibrary', ':viewlibrary', ':permissionlibrary'
+include ':app', ':ioclibrary', ':baselibrary', ':framelibrary', ':viewlibrary', ':permissionlibrary', ':butterknife-annotations', ':butterknife-annotations', ':butterknife-complier', ':butterknife'
