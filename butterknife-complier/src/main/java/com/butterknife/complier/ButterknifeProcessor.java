@@ -112,24 +112,35 @@ public class ButterknifeProcessor extends AbstractProcessor {
         for (Map.Entry<Element,List<Element>> entry:elementMap.entrySet()){
             Element enclosingElement = entry.getKey();
             List<Element> viewBindElements = entry.getValue();
-            //实现Unbind方法
+
+
+
+            //拼接 public final class xxx
+            String activityClassNamestr = enclosingElement.getSimpleName().toString();
+            ClassName activityClassName = ClassName.bestGuess(activityClassNamestr);
+            ClassName unbinderClassName = ClassName.get("com.butterknife","Unbinder");
+            TypeSpec.Builder classBuidler = TypeSpec.classBuilder(activityClassNamestr+
+                    "_ViewBinding")
+                    .addModifiers(Modifier.FINAL,Modifier.PUBLIC)
+                    .addSuperinterface(unbinderClassName)
+                    .addField(activityClassName,"target",Modifier.PRIVATE);
+
+        //实现Unbind方法
             ClassName callSuperClassName = ClassName.get("android.support.annotation","CallSuper");
             MethodSpec.Builder unbindMethodBuilder = MethodSpec.methodBuilder("unbind")
                     .addAnnotation(Override.class)
                     .addModifiers(Modifier.PUBLIC,Modifier.FINAL)
                     .addAnnotation(callSuperClassName);
 
-
-            //拼接 public final class xxx
-            ClassName unbinderClassName = ClassName.get("com.butterknife","Unbinder");
-            TypeSpec.Builder classBuidler = TypeSpec.classBuilder(enclosingElement.getSimpleName().toString()+
-                    "_ViewBinding")
-                    .addModifiers(Modifier.FINAL,Modifier.PUBLIC)
-                    .addSuperinterface(unbinderClassName);
-
-
-
             classBuidler.addMethod(unbindMethodBuilder.build());
+
+
+
+            //构造函数
+            MethodSpec.Builder constructorMethodBuilder = MethodSpec.constructorBuilder()
+                    .addParameter(activityClassName,"");
+
+
 
 
 
