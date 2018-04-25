@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- qq计步器 -->
+    <declare-styleable name="QQStepView">
+        <attr name="outerColor" format="color"/>
+        <attr name="innerColor" format="color"/>
+        <attr name="borderWidth" format="dimension"/>
+        <attr name="stepTextSize" format="dimension"/>
+        <attr name="stepTextColor" format="color"/>
+        <attr name="stepCurrent" format="integer"/>
+        <attr name="stepMax" format="integer"/>
+    </declare-styleable>
+    <!-- 自定义进度条 -->
+    <declare-styleable name="MyProgress">
+        <attr name="outerpColor" format="color"/>
+        <attr name="innerpColor" format="color"/>
+        <attr name="borderpWidth" format="dimension"/>
+        <attr name="innerTextSize" format="dimension"/>
+        <attr name="innerTextColor" format="color"/>
+        <attr name="progress" format="integer"/>
+        <attr name="progressMax" format="integer"/>
+    </declare-styleable>
+</resources>

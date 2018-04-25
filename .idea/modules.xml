@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/LeeLibrary.iml" filepath="$PROJECT_DIR$/LeeLibrary.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/baselibrary/baselibrary.iml" filepath="$PROJECT_DIR$/baselibrary/baselibrary.iml" />
+      <module fileurl="file://$PROJECT_DIR$/framelibrary/framelibrary.iml" filepath="$PROJECT_DIR$/framelibrary/framelibrary.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ioclibrary/ioclibrary.iml" filepath="$PROJECT_DIR$/ioclibrary/ioclibrary.iml" />
+      <module fileurl="file://$PROJECT_DIR$/permissionlibrary/permissionlibrary.iml" filepath="$PROJECT_DIR$/permissionlibrary/permissionlibrary.iml" />
+      <module fileurl="file://$PROJECT_DIR$/viewlibrary/viewlibrary.iml" filepath="$PROJECT_DIR$/viewlibrary/viewlibrary.iml" />
+    </modules>
+  </component>
+</project>
