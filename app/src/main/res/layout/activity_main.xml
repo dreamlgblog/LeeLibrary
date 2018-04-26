@@ -19,6 +19,13 @@
         app:outerColor="@color/colorPrimaryDark"
         app:borderWidth="12dp"
         app:stepTextColor="@color/colorPrimary"/>
+    <Button
+        android:id="@+id/btn_phone"
+        android:text="打电话"
+        android:textSize="25sp"
+        android:gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
     <TextView
         android:id="@+id/text_view"
         android:text="@string/app_name"
