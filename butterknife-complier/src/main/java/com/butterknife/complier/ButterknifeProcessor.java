@@ -1,6 +1,7 @@
 package com.butterknife.complier;
 
 import com.butterknife.annotations.BindView;
+import com.butterknife.annotations.OnClick;
 import com.google.auto.service.AutoService;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.JavaFile;
@@ -8,6 +9,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -32,6 +34,13 @@ public class ButterknifeProcessor extends AbstractProcessor {
 
     private Filer filer;
     private Elements mElementUtils;
+    private List<Element> viewElements;
+    private List<Element> clickElements;
+    private final ClassName unbinderClassName = ClassName.get("com.butterknife","Unbinder");
+    private final ClassName onClickClassName = ClassName.get("android.view.View","OnClickListener");
+    private final ClassName viewClass = ClassName.get("android.view","View");
+    private Map<Element,List<Element>> elementMapView = new LinkedHashMap<>();
+    private  Map<Element,List<Element>> elementMapOnclick = new LinkedHashMap<>();
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnvironment) {
@@ -59,113 +68,137 @@ public class ButterknifeProcessor extends AbstractProcessor {
 
     private Set<Class<? extends Annotation>> getSupportedAnnotations() {
         Set<Class<? extends Annotation>> annotations = new LinkedHashSet<>();
-        /*
-        annotations.add(BindAnim.class);
-        annotations.add(BindArray.class);
-        annotations.add(BindBitmap.class);
-        annotations.add(BindBool.class);
-        annotations.add(BindColor.class);
-        annotations.add(BindDimen.class);
-        annotations.add(BindDrawable.class);
-        annotations.add(BindFloat.class);
-        annotations.add(BindFont.class);
-        annotations.add(BindInt.class);
-        annotations.add(BindString.class);
-        annotations.add(BindViews.class);
-        annotations.addAll(LISTENERS);*/
-
         //需要解析的自定义注解
         annotations.add(BindView.class);
 
-
+        annotations.add(OnClick.class);
         return annotations;
     }
 
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment) {
-        //process方法代表的是， 有注解就都会进来。
-        Set<? extends Element> elements = roundEnvironment.getElementsAnnotatedWith(BindView.class);
-       /* for (Element element:
-             elements) {
-            //System.out.println("---------------------------------->"+element.getSimpleName().toString());
-            Element enclosingElement = element.getEnclosingElement();
-            System.out.println("----------------------->"+enclosingElement.getSimpleName().toString()
-            +""+element.getSimpleName().toString());
-        }*/
-        //解析属性， 一个activity对应的应该是一个List<Element>
-
-        Map<Element,List<Element>> elementMap = new LinkedHashMap<>();
-        for (Element element: elements){
-            Element enclosingElement = element.getEnclosingElement();
-
-            List<Element> viewBindElements = elementMap.get(enclosingElement);
-            if(viewBindElements == null){
-                viewBindElements = new ArrayList<>();
-                elementMap.put(enclosingElement,viewBindElements);
-            }
-            viewBindElements.add(element);
-        }
-
-        //生成代码
-
-
-        for (Map.Entry<Element,List<Element>> entry:elementMap.entrySet()){
+        //解析OnClick
+        parserOnClick(roundEnvironment);
+        //解析BindView
+        parserBindView(roundEnvironment);
+        //写java文件
+        for (Map.Entry<Element,List<Element>> entry:elementMapView.entrySet()){
             Element enclosingElement = entry.getKey();
             List<Element> viewBindElements = entry.getValue();
-
-
-
-            //拼接 public final class xxx
+            List<Element> elementListOnclick = elementMapOnclick.get(enclosingElement);
             String activityClassNamestr = enclosingElement.getSimpleName().toString();
             ClassName activityClassName = ClassName.bestGuess(activityClassNamestr);
-            ClassName unbinderClassName = ClassName.get("com.butterknife","Unbinder");
             TypeSpec.Builder classBuidler = TypeSpec.classBuilder(activityClassNamestr+
                     "_ViewBinding")
                     .addModifiers(Modifier.FINAL,Modifier.PUBLIC)
                     .addSuperinterface(unbinderClassName)
-                    .addField(activityClassName,"target",Modifier.PRIVATE);
-
-        //实现Unbind方法
-            ClassName callSuperClassName = ClassName.get("android.support.annotation","CallSuper");
-            MethodSpec.Builder unbindMethodBuilder = MethodSpec.methodBuilder("unbind")
-                    .addAnnotation(Override.class)
-                    .addModifiers(Modifier.PUBLIC,Modifier.FINAL)
-                    .addAnnotation(callSuperClassName);
-
-            unbindMethodBuilder.addStatement("$T target = this.target",activityClassName);
-            unbindMethodBuilder.addStatement("if(target == null) throw new IllegalStateException(\"Binding already cleared.\");");
-            //构造函数
-            MethodSpec.Builder constructorMethodBuilder = MethodSpec.constructorBuilder()
-                    .addParameter(activityClassName,"target");
-
-            constructorMethodBuilder.addStatement("this.target = target");
-            for (Element viewBindElement: elements){
-                String filedName = viewBindElement.getSimpleName().toString();
-                ClassName utilsClassName = ClassName.get("com.butterknife","Utils");
-                int resId = viewBindElement.getAnnotation(BindView.class).value();
-                constructorMethodBuilder.addStatement("target.$L = $T.findViewById(target,$L)",filedName,utilsClassName,resId);
-                unbindMethodBuilder.addStatement("target.$L = null",filedName);
+                    .addField(activityClassName,"target",Modifier.PRIVATE)
+                    .addField(viewClass,"view",Modifier.PRIVATE);
+            MethodSpec.Builder unbindMethodBuilder = writeUnbind(classBuidler,activityClassName);
+            MethodSpec.Builder constructor = writeConstructor(classBuidler, viewBindElements, activityClassName, unbindMethodBuilder);
+            if(elementListOnclick != null) {
+                writeOnclick(elementListOnclick, classBuidler, constructor);
             }
+            classBuidler.addMethod(constructor.build());
             classBuidler.addMethod(unbindMethodBuilder.build());
-            classBuidler.addMethod(constructorMethodBuilder.build());
-
-
-
-
-
-            //生成类，看一下效果
+            //生成类
             String packageName = mElementUtils.getPackageOf(enclosingElement).getQualifiedName().toString();
             try {
-                System.out.println("---------------------------》》生成了");
                 JavaFile.builder(packageName,classBuidler.build())
-                        .addFileComment("butterknife 自动生成")
-                    .build().writeTo(filer);
+                        .addFileComment("  ")
+                        .build().writeTo(filer);
             } catch (IOException e) {
                 e.printStackTrace();
-                System.out.println("---------------------------》》报异常了");
             }
         }
 
         return false;
     }
+
+    private void parserBindView(RoundEnvironment roundEnvironment){
+        Set<? extends Element> elements = roundEnvironment.getElementsAnnotatedWith(BindView.class);
+        for (Element element: elements){
+            Element enclosingElement = element.getEnclosingElement();
+            List<Element> viewBindElements = elementMapView.get(enclosingElement);
+            if(viewBindElements == null){
+                viewBindElements = new ArrayList<>();
+                elementMapView.put(enclosingElement,viewBindElements);
+            }
+            viewBindElements.add(element);
+        }
+    }
+    private void parserOnClick(RoundEnvironment roundEnvironment){
+        Set<? extends Element> elementsAnnotatedWith = roundEnvironment.getElementsAnnotatedWith(OnClick.class);
+        for (Element element: elementsAnnotatedWith){
+            Element enclosingElement = element.getEnclosingElement();
+
+            List<Element> viewBindElements = elementMapOnclick.get(enclosingElement);
+            if(viewBindElements == null){
+                viewBindElements = new ArrayList<>();
+                elementMapOnclick.put(enclosingElement,viewBindElements);
+            }
+            viewBindElements.add(element);
+        }
+    }
+
+
+    private MethodSpec.Builder writeUnbind(TypeSpec.Builder classBuidler,ClassName activityClassName){
+        //实现Unbind方法
+        ClassName callSuperClassName = ClassName.get("android.support.annotation","CallSuper");
+        MethodSpec.Builder unbindMethodBuilder = MethodSpec.methodBuilder("unbind")
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PUBLIC,Modifier.FINAL)
+                .addAnnotation(callSuperClassName);
+        unbindMethodBuilder.addStatement("$T target = this.target",activityClassName);
+        unbindMethodBuilder.addStatement("if(target == null) throw new IllegalStateException(\"Binding already cleared.\")");
+
+        return unbindMethodBuilder;
+    }
+
+    private MethodSpec.Builder writeConstructor( TypeSpec.Builder classBuidler ,List<Element> viewBindElements,ClassName activityClassName,MethodSpec.Builder unbindMethodBuilder){
+        //构造函数
+        MethodSpec.Builder constructorMethodBuilder = MethodSpec.constructorBuilder()
+                .addParameter(activityClassName,"target")
+                .addParameter(viewClass,"view");
+        constructorMethodBuilder.addStatement("this.target = target")
+                .addStatement("this.view= view");
+
+        ClassName utilsClassName = ClassName.get("com.butterknife","Utils");
+
+
+        //获取定义的单个属性
+        for (Element viewBindElement: viewBindElements){
+            String filedName = viewBindElement.getSimpleName().toString();
+            int resId = viewBindElement.getAnnotation(BindView.class).value();
+            constructorMethodBuilder.addStatement("target.$L = $T.findViewById(view,$L)",filedName,utilsClassName,resId);
+            unbindMethodBuilder.addStatement("target.$L = null",filedName);
+        }
+
+        return constructorMethodBuilder;
+    }
+
+
+    private void writeOnclick(List<Element> elementListOnclick,TypeSpec.Builder classBuidler, MethodSpec.Builder constructorMethodBuilder){
+        MethodSpec.Builder clickMethodBuilder = MethodSpec.methodBuilder("onClick")
+                .addParameter(viewClass,"view")
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PUBLIC);
+        if(elementListOnclick != null){
+            classBuidler.addSuperinterface(onClickClassName);
+            clickMethodBuilder.beginControlFlow("switch (view.getId())");
+            for (Element element:elementListOnclick){
+
+                int[] value = element.getAnnotation(OnClick.class).value();
+                String methodName = element.getSimpleName().toString();
+                for (int i=0;i < value.length;i++){
+                    constructorMethodBuilder.addStatement("view.findViewById($L).setOnClickListener(this)",value[i]);
+                    clickMethodBuilder.addStatement("case $L:\ntarget.$L()", value[i],methodName);
+                    clickMethodBuilder.addStatement("break");
+                }
+            }
+            clickMethodBuilder.endControlFlow();
+        }
+        classBuidler.addMethod(clickMethodBuilder.build());
+    }
+
 }

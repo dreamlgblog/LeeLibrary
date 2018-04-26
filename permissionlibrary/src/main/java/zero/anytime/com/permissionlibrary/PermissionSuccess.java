@@ -1,5 +1,7 @@
 package zero.anytime.com.permissionlibrary;
 
+import android.annotation.SuppressLint;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
