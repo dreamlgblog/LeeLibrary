@@ -25,6 +25,9 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.Elements;
 
 @AutoService(Processor.class)
@@ -97,7 +100,6 @@ public class ButterknifeProcessor extends AbstractProcessor {
         Map<Element,List<Element>> elementMap = new LinkedHashMap<>();
         for (Element element: elements){
             Element enclosingElement = element.getEnclosingElement();
-
             List<Element> viewBindElements = elementMap.get(enclosingElement);
             if(viewBindElements == null){
                 viewBindElements = new ArrayList<>();
