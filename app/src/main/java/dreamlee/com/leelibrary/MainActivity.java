@@ -1,6 +1,12 @@
 package dreamlee.com.leelibrary;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -11,6 +17,7 @@ import com.butterknife.annotations.OnClick;
 
 import zero.anytime.com.baselibrary.mvc.BaseActivity;
 import zero.anytime.com.permissionlibrary.PermissionFail;
+import zero.anytime.com.permissionlibrary.PermissionHelper;
 import zero.anytime.com.permissionlibrary.PermissionSuccess;
 
 public class MainActivity extends BaseActivity {
@@ -42,14 +49,17 @@ public class MainActivity extends BaseActivity {
 
     @OnClick(R.id.btn_phone)
     protected void CellPhone() {
-
+        PermissionHelper.with(this).requestPermission(Manifest.permission.CAMERA)
+                .requestCode(CALL_PHONE_CODE)
+                .request();
     }
 
 
-    @SuppressLint("MissingPermission")
     @PermissionSuccess(requestCode = CALL_PHONE_CODE)
-    public void CallPhone(){
-
+    public void CallPhone() {
+        //Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:18298194316"));
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);//调用摄像头action
+        startActivity(intent);
     }
 
     @PermissionFail(requestCode = CALL_PHONE_CODE)
@@ -57,11 +67,6 @@ public class MainActivity extends BaseActivity {
         Toast.makeText(this, "失败", Toast.LENGTH_SHORT).show();
     }
 
-
-    @OnClick({R.id.text_view,R.id.text_view3})
-    public void TextClick(){
-        Toast.makeText(this, "点击了TextView", Toast.LENGTH_SHORT).show();
-    }
 
     @Override
     protected void onDestroy() {

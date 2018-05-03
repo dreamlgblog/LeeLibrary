@@ -1,5 +1,6 @@
 package dreamlee.com.leelibrary;
 
+import android.support.v7.app.AlertDialog;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,7 +25,6 @@ public class SecondeActivity extends BaseActivity {
 
     @Override
     protected void initView() {
-
     }
 
     @Override

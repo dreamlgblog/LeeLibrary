@@ -9,7 +9,6 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -94,8 +93,9 @@ public class ButterknifeProcessor extends AbstractProcessor {
                     .addSuperinterface(unbinderClassName)
                     .addField(activityClassName,"target",Modifier.PRIVATE)
                     .addField(viewClass,"view",Modifier.PRIVATE);
-            MethodSpec.Builder unbindMethodBuilder = writeUnbind(classBuidler,activityClassName);
-            MethodSpec.Builder constructor = writeConstructor(classBuidler, viewBindElements, activityClassName, unbindMethodBuilder);
+            //解析注解
+            MethodSpec.Builder unbindMethodBuilder = writeUnbind(activityClassName);
+            MethodSpec.Builder constructor = writeConstructor(viewBindElements, activityClassName, unbindMethodBuilder);
             if(elementListOnclick != null) {
                 writeOnclick(elementListOnclick, classBuidler, constructor);
             }
@@ -142,7 +142,7 @@ public class ButterknifeProcessor extends AbstractProcessor {
     }
 
 
-    private MethodSpec.Builder writeUnbind(TypeSpec.Builder classBuidler,ClassName activityClassName){
+    private MethodSpec.Builder writeUnbind(ClassName activityClassName){
         //实现Unbind方法
         ClassName callSuperClassName = ClassName.get("android.support.annotation","CallSuper");
         MethodSpec.Builder unbindMethodBuilder = MethodSpec.methodBuilder("unbind")
@@ -155,7 +155,7 @@ public class ButterknifeProcessor extends AbstractProcessor {
         return unbindMethodBuilder;
     }
 
-    private MethodSpec.Builder writeConstructor( TypeSpec.Builder classBuidler ,List<Element> viewBindElements,ClassName activityClassName,MethodSpec.Builder unbindMethodBuilder){
+    private MethodSpec.Builder writeConstructor(List<Element> viewBindElements, ClassName activityClassName, MethodSpec.Builder unbindMethodBuilder){
         //构造函数
         MethodSpec.Builder constructorMethodBuilder = MethodSpec.constructorBuilder()
                 .addParameter(activityClassName,"target")

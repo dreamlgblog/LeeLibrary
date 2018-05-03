@@ -3,6 +3,8 @@ package zero.anytime.com.baselibrary.exceptioncrash;
 import android.content.Context;
 import android.util.Log;
 
+import java.util.concurrent.locks.Lock;
+
 /**
  * 单利全局异常捕捉
  *
@@ -10,14 +12,18 @@ import android.util.Log;
  *  腾讯的bugly 友盟
  *
  */
-public class ExceptionCrashHandler implements Thread.UncaughtExceptionHandler {
+public class  ExceptionCrashHandler implements Thread.UncaughtExceptionHandler {
 
     private static ExceptionCrashHandler mInstance;
     private Context mContext;
     private Thread.UncaughtExceptionHandler mDefaultExceptionHandler;
 
+    private ExceptionCrashHandler(){
+
+    }
     public static ExceptionCrashHandler getInstance(){
         if (mInstance == null){
+
             synchronized (ExceptionCrashHandler.class){
                 if(mInstance == null)
                     mInstance = new ExceptionCrashHandler();

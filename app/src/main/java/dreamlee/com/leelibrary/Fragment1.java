@@ -15,11 +15,10 @@ import com.butterknife.Butterknife;
 import com.butterknife.annotations.BindView;
 import com.butterknife.annotations.OnClick;
 
-import java.security.PublicKey;
-
 
 public class Fragment1 extends Fragment {
     private static String ARG_PARAM = "param_key";
+
     private String mParam;
     private Activity mActivity;
     @BindView(R.id.text) TextView view;
@@ -34,7 +33,6 @@ public class Fragment1 extends Fragment {
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_1, container, false);
-        //TextView view = root.findViewById(R.id.text);
         Butterknife.bind(this,root);
         view.setText(mParam);
         return root;
